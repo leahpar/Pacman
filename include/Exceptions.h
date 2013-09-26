@@ -1,0 +1,12 @@
+#ifndef EXCEPTIONS_H_INCLUDED
+#define EXCEPTIONS_H_INCLUDED
+
+
+#define ERR_INIT_AUDIO           100
+#define ERR_INIT_AUDIO_FILE      101
+#define ERR_INIT_TEXTURE         102
+#define ERR_INIT_TEXTURE_FILE    103
+#define ERR_INIT_MATRIX          104
+#define ERR_INIT_MATRIX_FILE     105
+
+#endif // EXCEPTIONS_H_INCLUDED
