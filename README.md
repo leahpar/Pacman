@@ -23,5 +23,8 @@ cd Pacman
 g++ src/*.cpp `sdl2-config --cflags --libs` -Iinclude -DLINUX -lSDL2_ttf -lSDL2_mixer
 ```
 
-
+TODO
+----
+* lot of things !
+* fix bug on exit (some memory leak)
 
