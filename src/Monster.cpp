@@ -1,154 +1,67 @@
-#include <cstddef>
+#include <cstdlib>
 
-#include <iostream>
-#include <fstream>
-#include <string>
-
-#include <thread>
-
-using namespace std;
-
-#include <SDL2/SDL.h>
-
-#include "Config.h"
-#include "Device.h"
-#include "Position.h"
-#include "Player.h"
+#include "Monster.h"
 #include "Game.h"
-#include "Exceptions.h"
+#include "Position.h"
 
-Player::Player(Game * game, int id)
+Monster::Monster(Game * game, int id) :
+      Player(game, id)
 {
+   //ctor
    this->idPlayer = id;
    this->game = game;
    this->score = 0;
    this->dots  = 0;
-   this->position = new Position(23, 13);
+   this->position = new Position(14, 13);
    this->curDirection = ACTION_STOP;
-
-   this->alive = false;
-   this->speed = 20;
+   this->weak = 0;
+   this->speed = 25;
 }
 
-Player::~Player()
+Monster::~Monster()
 {
+   //dtor
 }
 
-void Player::live()
+void Monster::live()
 {
    this->alive = true;
-   std::thread t(Player::run, this);
+   std::thread t(Monster::run, this);
    t.detach();
 }
 
-void Player::die()
+void Monster::die()
 {
    this->alive = false;
 }
 
-void Player::run(Player * p)
+void Monster::run(Monster * m)
 {
-   int tic = 0;
-   while (p->alive)
+   while (m->alive)
    {
-      p->movePac();
+      m->movePac();
 
-      if (tic%100 == 0) p->score -= 1;
+      if (m->weak > 0) m->weak--;
 
-      SDL_Delay(p->getSpeed());
-      tic++;
+      SDL_Delay(m->getSpeed());
    }
 }
 
-void Player::play(int action)
-{
-   if (action != ACTION_NONE)
-   {
-      this->newDirection = action;
-   }
-}
-
-void Player::eatAction()
-{
-   switch (this->game->matrix[this->position->x()]
-                             [this->position->y()])
-   {
-      case PX_DOT:
-         this->eatDot();
-         this->addScore(PX_DOT);
-         break;
-      case PX_POWER:
-         this->eatPower();
-         this->addScore(PX_POWER);
-         break;
-      case PX_BONUS_1:
-      case PX_BONUS_2:
-      case PX_BONUS_3:
-      case PX_BONUS_4:
-      case PX_BONUS_5:
-      case PX_BONUS_6:
-      case PX_BONUS_7:
-      case PX_BONUS_8:
-         this->eatBonus();
-         this->addScore(this->game->matrix[this->position->x()]
-                                          [this->position->y()]);
-         break;
-   }
-}
-
-void Player::eatDot()
-{
-   this->dots++;
-   this->game->eatDot(this->position);
-}
-
-void Player::eatPower()
-{
-   this->game->eatPower(this->position);
-}
-
-void Player::eatBonus()
-{
-   /* TODO */
-}
-
-void Player::addScore(int item)
-{
-   switch (item)
-   {
-      case PX_DOT:
-         this->score += 1;
-         break;
-      case PX_POWER:
-         this->score += 5;
-         break;
-      case PX_BONUS_1:
-      case PX_BONUS_2:
-      case PX_BONUS_3:
-      case PX_BONUS_4:
-      case PX_BONUS_5:
-      case PX_BONUS_6:
-      case PX_BONUS_7:
-      case PX_BONUS_8:
-         this->score += 5;
-         break;
-   }
-}
-
-void Player::movePac()
+void Monster::movePac()
 {
    int flag = 0;
+
    int step = 0;
 
    // move pacman
    step = this->position->moveDelta(this->curDirection);
 
-   if (step == 1) this->eatAction();
-
    // if new case or no direction
    if ((step == 1)
     || (this->curDirection == ACTION_STOP))
    {
+      this->newDirection = this->IA_newDirection();
+
       // test new direction
       switch (this->newDirection)
       {
@@ -225,73 +138,65 @@ void Player::movePac()
             break;
       }
    }
+   //this->position.dir = this->curDirection;
 }
 
-void Player::levelUp()
+int Monster::getTileProp(int tic)
 {
-   this->level++;
+   if (this->weak == 0)
+   {
+      return this->curDirection * NB_C_MONSTER
+              + 5 * NB_C_MONSTER * ((this->idPlayer % NB_MONSTER) + 1)
+              + (tic / 10) % NB_C_MONSTER;
+   }
+   else
+   {
+      return this->curDirection * NB_C_MONSTER
+              + (tic / 10) % NB_C_MONSTER;
+   }
 }
 
-int Player::getTileProp(int tic)
+int Monster::IA_newDirection()
 {
-   return this->curDirection * NB_C_PACMAN + (tic/5)%NB_C_PACMAN;
+   int dir = std::rand() % 4 + 1;
+   switch (this->curDirection)
+   {
+   case ACTION_MOVE_RIGHT:
+      if (dir == ACTION_NOT_RIGHT) dir = (dir + 1) % 4 + 1;
+      break;
+   case ACTION_MOVE_LEFT:
+      if (dir == ACTION_NOT_LEFT) dir = (dir + 1) % 4 + 1;
+      break;
+   case ACTION_MOVE_UP:
+      if (dir == ACTION_NOT_UP) dir = (dir + 1) % 4 + 1;
+      break;
+   case ACTION_MOVE_DOWN:
+      if (dir == ACTION_NOT_DOWN) dir = (dir + 1) % 4 + 1;
+      break;
+   }
+   return dir;
 }
-
 
 /********************************
 	accessors
 ********************************/
 
-int Player::getLevel() {
-	return this->level;
+bool Monster::getWeak() {
+	return (this->weak > 0);
 }
 
-void Player::setLevel(int level) {
-	this->level = level;
+void Monster::setWeak() {
+	this->weak = MONSTER_WEAK;
 }
 
-int Player::getScore() {
-	return this->score;
-}
-
-void Player::setScore(int score) {
-	this->score = score;
-}
-
-Player * Player::getOpponent() {
-	return this->opponent;
-}
-
-void Player::setOpponent(Player * opponent) {
-	this->opponent = opponent;
-}
-
-
-int Player::getCurDirection() {
-	return this->curDirection;
-}
-
-void Player::setCurDirection(int curDirection) {
-	this->curDirection = curDirection;
-}
-
-int Player::getNewDirection() {
-	return this->newDirection;
-}
-
-void Player::setNewDirection(int newDirection) {
-	this->newDirection = newDirection;
-}
-
-Position * Player::getPosition() {
-	return this->position;
-}
-
-int Player::getSpeed()
+int Monster::getSpeed()
 {
-   return this->speed;
+   if (this->weak > 0)
+      return this->speed + 10;
+   else
+      return this->speed;
 }
+
 /********************************
 	end accessors
 ********************************/
-

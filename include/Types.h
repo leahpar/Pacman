@@ -14,13 +14,5 @@ typedef struct
    int action;
 } Action;
 
-typedef struct
-{
-   int x;
-   int y;
-   int subpos;
-} Position;
-
-
 
 #endif // TYPES_H_INCLUDED

@@ -1,9 +1,13 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <thread>
+
 #include "Config.h"
 #include "Types.h"
-#include "Game.h"
+#include "Position.h"
+
+
 
 class Game;
 class Player
@@ -13,15 +17,27 @@ class Player
       Player(Game * game, int id);
       ~Player();
 
-      int play(int action);
+      void play(int action);
 
-      int getTic();
       void levelUp();
 
       void setOpponent(Player * oponnent);
       Player * getOpponent();
 
+      void live();
+      void die();
+      static void run(Player * p);
+
       void movePac();
+
+      void eatAction();
+      void eatDot();
+      void eatPower();
+      void eatBonus();
+
+      int getTileProp(int tic);
+
+      void addScore(int item);
 
       /********************************
          accessors
@@ -33,8 +49,7 @@ class Player
       int getNewDirection();
       void setNewDirection(int newDirection);
 
-      Position getPosition();
-      void setPosition(Position position);
+      Position * getPosition();
 
       int getScore();
       void setScore(int score);
@@ -42,28 +57,34 @@ class Player
       int getLevel();
       void setLevel(int level);
 
+      int getSpeed();
+
       /********************************
          end accessors
       ********************************/
 
    protected:
 
-   private:
+      bool alive;
+      int speed;
 
       int level;
       int score;
+      int dots;
 
       int tic;
       int action;
 
       int curDirection;
       int newDirection;
-      Position position;
+      Position * position;
 
       int idPlayer;
       Player * opponent;
 
       Game * game;
+
+   private:
 
 };
 #endif // PLAYER_H

@@ -4,6 +4,7 @@
 #include "Device.h"
 #include "Game.h"
 #include "Config.h"
+#include "Types.h"
 #include "Exceptions.h"
 
 using namespace std;
@@ -20,7 +21,8 @@ int main(int argc, char **argv)
    {
       _game = new Game();
       _game->setPlayers(1);
-      _game->display();
+      _game->setMonsters(1);
+      _game->displayInit();
 
       _game->actionPause(string("Init"));
       _game->play();
