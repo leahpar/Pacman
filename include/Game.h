@@ -34,7 +34,7 @@ class Game
       void setMonsters(int n);
       void addMonster();
 
-      void play();
+      int  play();
       void eatDot(Position * pos);
       void eatPower(Position * pos);
       void setWeakMonsters();
@@ -45,6 +45,7 @@ class Game
 
       int actionPause(string str);
       Action getAction();
+      string pauseStr;
 
       void setPause();
       void unsetPause();
@@ -66,6 +67,7 @@ class Game
       // screen display
       SDL_Window*    screen;
       SDL_Renderer*  renderer;
+ 
 
       // textures
       SDL_Texture*   tileset;

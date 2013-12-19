@@ -6,11 +6,11 @@
 #define DT_USLEEP  30000
 
 
-#define MATRIX_FILE "matrix.txt"
+#define MATRIX_FILE "ressources/matrix.txt"
 
 #define SCORE_DISPLAY_Y 1
 #define SCORE_DISPLAY_X 1
-#define SCORE_DISPLAY_L 12
+#define SCORE_DISPLAY_L 11
 
 #define STEP 2
 

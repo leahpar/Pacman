@@ -175,42 +175,43 @@ void Game::initMatrix()
    int i, j, t;
    FILE* f;
 
-	f = fopen(MATRIX_FILE, "r");
-	if (f == NULL)
-	{
-		throw ERR_INIT_MATRIX_FILE;
-	}
+   f = fopen(MATRIX_FILE, "r");
+   if (f == NULL)
+   {
+      Alert(NULL, "Cannot open matrix file", NULL, 0);
+      throw ERR_INIT_MATRIX_FILE;
+   }
 
-	fscanf(f, "%d %d", &this->matrix_x, &this->matrix_y);
+   fscanf(f, "%d %d", &this->matrix_x, &this->matrix_y);
 
-	/* set lines */
-	this->matrix.resize(this->matrix_x);
+   /* set lines */
+   this->matrix.resize(this->matrix_x);
 
    this->dots = 0;
    for(i=0; i<this->matrix_x; i++)
-	{
+   {
       /* set columns */
       this->matrix[i].resize(this->matrix_y);
 
-		for(j=0; j<this->matrix_y; j++)
+      for(j=0; j<this->matrix_y; j++)
       {
          /* read PX */
          fscanf(f, "%d", &t);
-			if (t > NB_PX)
-			{
-				throw ERR_INIT_MATRIX;
-			}
-			/* set PX */
-			this->matrix[i][j] = t;
-			/* count dots */
-			if (t == PX_DOT)
+         if (t > NB_PX)
+         {
+            throw ERR_INIT_MATRIX;
+         }
+         /* set PX */
+         this->matrix[i][j] = t;
+         /* count dots */
+         if (t == PX_DOT)
          {
             this->dots++;
-			}
-		}
-	}
-	fclose(f);
-	this->endGame = 0;
+         }
+      }
+   }
+   fclose(f);
+   this->endGame = 0;
 }
 
 void Game::displayInit()
@@ -367,6 +368,18 @@ void Game::displayScore()
       text << this->players[p]->getScore() << "    ";
    text << endl;
 
+   if (this->pauseStr.size() > 1)
+   {
+      text << endl;
+      text << endl;
+      text << this->pauseStr;
+   }
+
+   text << endl;
+   text << endl;
+   text << endl;
+   text << endl;
+
    surface = TTF_RenderText_Blended_Wrapped(this->font, text.str().c_str(), FONT_COLOR, TILE_S * SCORE_DISPLAY_L);
    texture = SDL_CreateTextureFromSurface(this->renderer, surface);
 
@@ -387,16 +400,17 @@ void Game::displayScore()
    SDL_DestroyTexture(texture);
 }
 
-void Game::play()
+int Game::play()
 {
    int act[this->players.size()];
    Action action;
    int tic;
    unsigned int p, m;
-   SDL_Event event;
 
-   // purge queue events
-   while(SDL_PollEvent(&event));
+   // init pause
+   p = this->actionPause(string("Press Enter to begin"));
+   if (p == ACTION_QUIT) return ACTION_QUIT;
+
    tic = 0;
 
    for (p=0; p<this->players.size(); p++)
@@ -419,6 +433,7 @@ void Game::play()
       else if (action.action == ACTION_QUIT)
       {
          this->endGame = 1;
+         return ACTION_QUIT;
       }
       tic++;
 
@@ -442,20 +457,22 @@ void Game::play()
                   else
                   {
                      this->endGame = 1;
+                     this->actionPause(string("Game over !"));
+                     return ACTION_QUIT;
                   }
                }
             }
          }
       }
 
-      if (tic%111 == 0) this->addMonster();
+      if (tic%200 == 0) this->addMonster();
 
       // display 1/2 frame
       if ((tic+1)%2 == 0) this->display(tic);
       SDL_Delay(this->speed);
    }
 
-   this->setPause();
+   return ACTION_NONE;
 }
 
 void Game::addBonus(int tic)
@@ -619,6 +636,8 @@ int Game::actionPause(string str)
    while(SDL_PollEvent(&event));
 
    this->setPause();
+   this->pauseStr = str;
+   this->display(0);
 
    // wait for end pause or quit
    while(action == ACTION_NONE)
@@ -661,12 +680,13 @@ int Game::actionPause(string str)
             break;
       }
       this->display(0);
-      SDL_Delay(5);
+      SDL_Delay(50);
    }
 
    if (action != ACTION_QUIT)
    {
       this->unsetPause();
+      this->pauseStr = "";
    }
 
    return action;

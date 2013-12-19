@@ -8,6 +8,9 @@
 #include "Exceptions.h"
 
 using namespace std;
+#ifdef WIN32
+#undef main
+#endif
 int main(int argc, char **argv)
 {
    Game * _game;
@@ -24,11 +27,10 @@ int main(int argc, char **argv)
       _game->setMonsters(1);
       _game->displayInit();
 
-      _game->actionPause(string("Init"));
-      _game->play();
+      action = _game->play();
 
       // wait for end pause or quit
-      while(action == 0)
+      while(action != ACTION_QUIT)
       {
          SDL_WaitEvent(&event);
          switch(event.type)
@@ -36,10 +38,15 @@ int main(int argc, char **argv)
             case SDL_QUIT:
                action = 1;
                break;
-            default:
-               break;
+            case SDL_KEYDOWN:
+               switch(event.key.keysym.sym)
+               {
+                  case SDLK_ESCAPE:
+                     action = 1;
+                     break;
+               }
          }
-         SDL_Delay(20);
+         SDL_Delay(50);
       }
    }
    catch (int e)
