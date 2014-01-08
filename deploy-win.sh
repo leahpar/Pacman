@@ -72,6 +72,7 @@ grep "/usr/bin/i686-w64-mingw32-g++" CMakeCache.txt >/dev/null 2>&1
 if [ $? -ne 0 ]; then
    rm -rf *
    cmake -DCMAKE_TOOLCHAIN_FILE=../Toolchain-mingw32.cmake ..
+   rm -rf CMakeFiles
 fi
 
 make
